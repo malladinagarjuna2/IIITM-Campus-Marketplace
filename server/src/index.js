@@ -24,10 +24,10 @@ app.get('/api/health', (req, res) => {
 
 // ─── API Routes ─────────────────────────────────────────────────────────────────
 app.use('/api/auth', require('./routes/auth'));
-// app.use('/api/listings', require('./routes/listings'));
-// app.use('/api/demands', require('./routes/demands'));
-// app.use('/api/chats', require('./routes/chats'));
-// app.use('/api/transactions', require('./routes/transactions'));
+app.use('/api/listings', require('./routes/listings'));
+app.use('/api/demands', require('./routes/demands'));
+app.use('/api/chats', require('./routes/chats'));
+app.use('/api/transactions', require('./routes/transactions'));
 
 // ─── 404 Handler ────────────────────────────────────────────────────────────────
 app.use((req, res) => {
