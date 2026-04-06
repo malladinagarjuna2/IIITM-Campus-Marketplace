@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -26,10 +26,11 @@ export default function NewDemandPage() {
   const [budgetMin, setBudgetMin] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
 
-  if (!user) {
-    router.replace("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (!user) router.replace("/login");
+  }, [user, router]);
+
+  if (!user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +106,7 @@ export default function NewDemandPage() {
 
               <div className="space-y-2">
                 <Label>Category <span className="text-destructive">*</span></Label>
-                <Select onValueChange={setCategory} required>
+                <Select onValueChange={(v: string | null) => { if (v) setCategory(v); }} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select category…" />
                   </SelectTrigger>

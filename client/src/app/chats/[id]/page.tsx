@@ -32,15 +32,17 @@ export default function ChatPage() {
   const [transactionId, setTransactionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const fetchChat = async () => {
+  const fetchChat = async (silent = false) => {
     try {
       const data = await api<any>(`/chats/${id}`, { token });
       setChat(data.chat);
       setRole(data.role);
       setQuickReplies(data.quickReplies || []);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to load chat");
-      router.push("/chats");
+      if (!silent) {
+        toast.error(err instanceof Error ? err.message : "Failed to load chat");
+        router.push("/chats");
+      }
     } finally {
       setLoading(false);
     }
@@ -49,6 +51,10 @@ export default function ChatPage() {
   useEffect(() => {
     if (!user) { router.replace("/login"); return; }
     fetchChat();
+
+    // Poll for new messages every 3 seconds
+    const interval = setInterval(() => fetchChat(true), 3000);
+    return () => clearInterval(interval);
   }, [id, user]);
 
   useEffect(() => {

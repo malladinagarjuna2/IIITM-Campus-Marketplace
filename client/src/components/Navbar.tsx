@@ -16,7 +16,6 @@ import {
   Menu,
   X,
   Search,
-  Shield,
 } from "lucide-react";
 
 interface NavbarProps {
@@ -53,20 +52,20 @@ export default function Navbar({ onSearch, searchValue = "" }: NavbarProps) {
 
   return (
     <header className="sticky top-0 z-50 bg-[var(--navy)] shadow-md">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
-        {/* Logo */}
+      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
+
+        {/* ── LEFT: Logo ────────────────────────────────────────── */}
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <div className="w-8 h-8 rounded-lg bg-[var(--gold)] flex items-center justify-center">
             <span className="text-xs font-black text-[var(--navy-dark)]">CM</span>
           </div>
-          <span className="hidden sm:block font-bold text-white text-lg leading-tight">
-            Campus<br className="hidden" />
-            <span className="text-[var(--gold)]">Market</span>
+          <span className="hidden sm:inline font-bold text-white text-lg">
+            Campus<span className="text-[var(--gold)]">Market</span>
           </span>
         </Link>
 
-        {/* Search bar */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden md:flex">
+        {/* ── CENTER: Search bar ────────────────────────────────── */}
+        <form onSubmit={handleSearch} className="flex-1 max-w-lg hidden md:flex mx-auto">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -79,59 +78,59 @@ export default function Navbar({ onSearch, searchValue = "" }: NavbarProps) {
           </div>
         </form>
 
+        {/* Spacer for mobile */}
         <div className="flex-1 md:hidden" />
 
-        {/* Desktop nav */}
+        {/* ── RIGHT: Nav actions ────────────────────────────────── */}
         {user ? (
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-2 shrink-0">
             <Link href="/listings/new">
-              <Button size="sm" className="bg-[var(--gold)] hover:bg-[var(--gold-dark)] text-[var(--navy-dark)] font-semibold gap-1.5">
+              <Button size="sm" className="bg-[var(--gold)] hover:bg-[var(--gold-dark)] text-[var(--navy-dark)] font-semibold gap-1.5 h-8 px-3">
                 <PlusCircle className="w-4 h-4" /> Sell
               </Button>
             </Link>
+
             <Link href="/chats">
-              <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 gap-1.5">
+              <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 gap-1.5 h-8">
                 <MessageCircle className="w-4 h-4" /> Chats
               </Button>
             </Link>
-            <Link href="/profile">
-              <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 gap-1.5">
-                <Avatar className="w-6 h-6">
-                  <AvatarFallback className="text-[10px] bg-[var(--gold)] text-[var(--navy-dark)]">{initials}</AvatarFallback>
-                </Avatar>
-                <span className="hidden lg:inline">
+
+            {/* Divider */}
+            <div className="w-px h-6 bg-white/20 mx-1" />
+
+            {/* Profile */}
+            <Link href="/profile" className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/10 transition-colors">
+              <Avatar className="w-7 h-7">
+                <AvatarFallback className="text-[10px] font-bold bg-[var(--gold)] text-[var(--navy-dark)]">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col items-start">
+                <span className="text-white text-sm font-medium leading-tight">
                   {user.showRealIdentity ? user.realName.split(" ")[0] : user.anonymousNickname}
                 </span>
                 {user.isRatingVisible && user.averageRating && (
-                  <Badge className="bg-[var(--gold)] text-[var(--navy-dark)] text-[10px] px-1 py-0 h-4">
-                    ★ {user.averageRating}
-                  </Badge>
+                  <span className="text-[var(--gold)] text-[10px] leading-tight">★ {user.averageRating}</span>
                 )}
-              </Button>
+              </div>
             </Link>
-            {(user as any).role === "admin" && (
-              <Link href="/admin">
-                <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 gap-1.5">
-                  <Shield className="w-4 h-4" /> Admin
-                </Button>
-              </Link>
-            )}
+
             <Button
               variant="ghost"
               size="sm"
               onClick={handleLogout}
-              className="text-white/60 hover:text-white hover:bg-white/10"
+              className="text-white/50 hover:text-white hover:bg-white/10 h-8 w-8 p-0"
+              title="Sign out"
             >
               <LogOut className="w-4 h-4" />
             </Button>
           </nav>
         ) : (
-          <nav className="hidden md:flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-2 shrink-0">
             <Link href="/login">
-              <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10">Sign in</Button>
+              <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 h-8">Sign in</Button>
             </Link>
             <Link href="/register">
-              <Button size="sm" className="bg-[var(--gold)] hover:bg-[var(--gold-dark)] text-[var(--navy-dark)] font-semibold">Register</Button>
+              <Button size="sm" className="bg-[var(--gold)] hover:bg-[var(--gold-dark)] text-[var(--navy-dark)] font-semibold h-8">Register</Button>
             </Link>
           </nav>
         )}
@@ -179,13 +178,6 @@ export default function Navbar({ onSearch, searchValue = "" }: NavbarProps) {
                   <User className="w-4 h-4" /> Profile
                 </Button>
               </Link>
-              {(user as any).role === "admin" && (
-                <Link href="/admin" onClick={() => setMobileOpen(false)}>
-                  <Button variant="ghost" className="w-full text-white/80 justify-start gap-2">
-                    <Shield className="w-4 h-4" /> Admin Panel
-                  </Button>
-                </Link>
-              )}
               <Button variant="ghost" onClick={handleLogout} className="w-full text-white/60 justify-start gap-2">
                 <LogOut className="w-4 h-4" /> Sign out
               </Button>
