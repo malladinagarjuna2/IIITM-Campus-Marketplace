@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -26,7 +26,7 @@ const CATEGORIES = [
 
 type Tab = "listings" | "demands";
 
-export default function HomePage() {
+function HomePageInner() {
   const { user, isLoading } = useAuth();
   const searchParams = useSearchParams();
 
@@ -245,5 +245,13 @@ export default function HomePage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <HomePageInner />
+    </Suspense>
   );
 }
