@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Star, Package, ShoppingBag, Lock, Plus, LogOut } from "lucide-react";
 
 export default function ProfilePage() {
-  const { user, token, logout } = useAuth();
+  const { user, token, isLoading, logout } = useAuth();
   const router = useRouter();
   const [myListings, setMyListings] = useState<any[]>([]);
   const [tradeHistory, setTradeHistory] = useState<any[]>([]);
@@ -25,6 +25,7 @@ export default function ProfilePage() {
   const [tab, setTab] = useState<"listings" | "history">("listings");
 
   useEffect(() => {
+    if (isLoading) return;
     if (!user) {
       router.replace("/login");
       return;
@@ -41,9 +42,9 @@ export default function ProfilePage() {
       .then((d) => setTradeHistory(d.transactions))
       .catch(() => {})
       .finally(() => setLoadingHistory(false));
-  }, [user, token]);
+  }, [isLoading, user, token]);
 
-  if (!user) return null;
+  if (isLoading || !user) return null;
 
   const initials = (user.showRealIdentity ? user.realName : user.anonymousNickname)
     .split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase();

@@ -19,7 +19,7 @@ import {
 export default function ChatPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, token, isLoading } = useAuth();
 
   const [chat, setChat] = useState<any>(null);
   const [role, setRole] = useState<"buyer" | "seller">("buyer");
@@ -49,13 +49,14 @@ export default function ChatPage() {
   };
 
   useEffect(() => {
+    if (isLoading) return;
     if (!user) { router.replace("/login"); return; }
     fetchChat();
 
     // Poll for new messages every 3 seconds
     const interval = setInterval(() => fetchChat(true), 3000);
     return () => clearInterval(interval);
-  }, [id, user]);
+  }, [id, isLoading, user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

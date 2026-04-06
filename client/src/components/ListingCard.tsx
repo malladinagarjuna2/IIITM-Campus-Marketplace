@@ -21,7 +21,6 @@ interface Listing {
   images: string[];
   interestCount: number;
   viewCount: number;
-  shouldSuggestAuction?: boolean;
   auctionMode?: boolean;
   seller: Seller;
   createdAt: string;
@@ -64,10 +63,10 @@ export default function ListingCard({ listing }: { listing: Listing }) {
               🔨 Auction
             </span>
           )}
-          {/* Hot badge */}
-          {!listing.auctionMode && listing.shouldSuggestAuction && (
+          {/* High demand badge */}
+          {!listing.auctionMode && listing.interestCount >= 2 && (
             <span className="absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded-full bg-orange-500 text-white">
-              🔥 Hot
+              🔥 High Demand
             </span>
           )}
         </div>

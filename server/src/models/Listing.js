@@ -115,14 +115,13 @@ const listingSchema = new mongoose.Schema(
     auctionDeposit: {
       type: Number,
       min: [0, 'Deposit cannot be negative'],
-      validate: {
-        validator: function (v) {
-          // Required only if auctionMode is true
-          if (this.auctionMode && (!v || v <= 0)) return false;
-          return true;
-        },
-        message: 'Auction deposit is required when auction mode is enabled',
-      },
+      default: null,
+    },
+
+    // Timestamp when auction was auto-triggered
+    auctionTriggeredAt: {
+      type: Date,
+      default: null,
     },
 
     // ── Engagement Metrics ────────────────────────────────────────────────────
@@ -153,10 +152,9 @@ const listingSchema = new mongoose.Schema(
 
 // ─── Virtuals ───────────────────────────────────────────────────────────────────
 
-// Flag high-interest listings that should be suggested for auction mode
-listingSchema.virtual('shouldSuggestAuction').get(function () {
-  // Suggest auction if 3+ buyers have shown interest and it's not already in auction mode
-  return !this.auctionMode && this.interestCount >= 3;
+// Whether auction should auto-trigger (2+ interested buyers)
+listingSchema.virtual('shouldAutoAuction').get(function () {
+  return !this.auctionMode && this.interestCount >= 2;
 });
 
 // ─── Indexes ────────────────────────────────────────────────────────────────────

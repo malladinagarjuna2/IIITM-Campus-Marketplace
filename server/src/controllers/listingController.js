@@ -198,18 +198,29 @@ const markInterest = async (req, res) => {
     if (listing.interestedUsers && listing.interestedUsers.includes(req.user._id.toString())) {
       return res.json({
         interestCount: listing.interestCount,
-        shouldSuggestAuction: listing.shouldSuggestAuction,
+        auctionMode: listing.auctionMode,
         alreadyInterested: true,
       });
     }
 
     listing.interestedUsers.push(req.user._id);
     listing.interestCount = listing.interestedUsers.length;
+
+    // Auto-trigger auction mode when 2+ buyers are interested
+    let auctionTriggered = false;
+    if (!listing.auctionMode && listing.interestCount >= 2) {
+      listing.auctionMode = true;
+      listing.auctionDeposit = Math.round(listing.price * 0.1); // 10% deposit
+      listing.auctionTriggeredAt = new Date();
+      auctionTriggered = true;
+    }
+
     await listing.save();
 
     res.json({
       interestCount: listing.interestCount,
-      shouldSuggestAuction: listing.shouldSuggestAuction,
+      auctionMode: listing.auctionMode,
+      auctionTriggered,
       alreadyInterested: false,
     });
   } catch (error) {
@@ -232,33 +243,4 @@ const getMyListings = async (req, res) => {
   }
 };
 
-/**
- * PUT /api/listings/:id/auction
- * Enable auction mode on a listing (seller only)
- */
-const enableAuction = async (req, res) => {
-  try {
-    const { auctionDeposit } = req.body;
-    if (!auctionDeposit || auctionDeposit <= 0) {
-      return res.status(400).json({ error: 'A valid auction deposit is required.' });
-    }
-
-    const listing = await Listing.findById(req.params.id);
-    if (!listing) return res.status(404).json({ error: 'Listing not found.' });
-
-    if (listing.seller.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ error: 'Only the seller can enable auction mode.' });
-    }
-
-    listing.auctionMode = true;
-    listing.auctionDeposit = auctionDeposit;
-    await listing.save();
-
-    res.json({ message: 'Auction mode enabled!', listing });
-  } catch (error) {
-    console.error('enableAuction error:', error);
-    res.status(500).json({ error: 'Failed to enable auction mode.' });
-  }
-};
-
-module.exports = { getListings, getListing, createListing, updateListing, deleteListing, markInterest, getMyListings, enableAuction };
+module.exports = { getListings, getListing, createListing, updateListing, deleteListing, markInterest, getMyListings };

@@ -11,12 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { MessageCircle } from "lucide-react";
 
 export default function ChatsListPage() {
-  const { user, token } = useAuth();
+  const { user, token, isLoading } = useAuth();
   const router = useRouter();
   const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isLoading) return;
     if (!user) {
       router.replace("/login");
       return;
@@ -25,9 +26,9 @@ export default function ChatsListPage() {
       .then((d) => setChats(d.chats))
       .catch(() => toast.error("Failed to load chats"))
       .finally(() => setLoading(false));
-  }, [user, token]);
+  }, [isLoading, user, token]);
 
-  if (!user) return null;
+  if (isLoading || !user) return null;
 
   return (
     <div className="min-h-screen bg-background">

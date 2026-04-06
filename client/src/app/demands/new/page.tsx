@@ -18,7 +18,7 @@ const CATEGORIES = ["books", "electronics", "clothing", "furniture", "stationery
 
 export default function NewDemandPage() {
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, token, isLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -27,10 +27,10 @@ export default function NewDemandPage() {
   const [budgetMax, setBudgetMax] = useState("");
 
   useEffect(() => {
-    if (!user) router.replace("/login");
-  }, [user, router]);
+    if (!isLoading && !user) router.replace("/login");
+  }, [isLoading, user, router]);
 
-  if (!user) return null;
+  if (isLoading || !user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

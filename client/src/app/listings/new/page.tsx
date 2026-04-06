@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, X } from "lucide-react";
+import { ArrowLeft, Camera, X } from "lucide-react";
 import Link from "next/link";
 
 const CATEGORIES = ["books", "electronics", "clothing", "furniture", "stationery", "sports", "accessories", "other"];
@@ -25,7 +25,7 @@ const CONDITIONS = [
 
 export default function NewListingPage() {
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, token, isLoading } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const [title, setTitle] = useState("");
@@ -33,34 +33,37 @@ export default function NewListingPage() {
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
   const [condition, setCondition] = useState("");
-  const [images, setImages] = useState<string[]>([""]);
+  const [images, setImages] = useState<string[]>([]);
   const [priceReferenceLink, setPriceReferenceLink] = useState("");
 
   useEffect(() => {
-    if (!user) router.replace("/login");
-  }, [user, router]);
+    if (!isLoading && !user) router.replace("/login");
+  }, [isLoading, user, router]);
 
-  if (!user) return null;
-
-  const addImage = () => {
-    if (images.length < 5) setImages([...images, ""]);
-  };
+  if (isLoading || !user) return null;
 
   const removeImage = (idx: number) => {
     setImages(images.filter((_, i) => i !== idx));
   };
 
-  const updateImage = (idx: number, val: string) => {
-    const updated = [...images];
-    updated[idx] = val;
-    setImages(updated);
+  const handleImageFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const remaining = 5 - images.length;
+    const toProcess = files.slice(0, remaining);
+    toProcess.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setImages((prev) => [...prev, ev.target?.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const validImages = images.filter((img) => img.trim());
-    if (validImages.length === 0) {
-      toast.error("At least 1 image URL is required.");
+    if (images.length === 0) {
+      toast.error("At least 1 photo is required.");
       return;
     }
     if (!category) {
@@ -82,7 +85,7 @@ export default function NewListingPage() {
           category,
           price: Number(price),
           condition,
-          images: validImages,
+          images,
           priceReferenceLink: priceReferenceLink || undefined,
         },
         token,
@@ -190,27 +193,33 @@ export default function NewListingPage() {
 
               {/* Images */}
               <div className="space-y-2">
-                <Label>Image URLs <span className="text-destructive">*</span> <span className="font-normal text-muted-foreground">(1-5)</span></Label>
-                <div className="space-y-2">
+                <Label>Photos <span className="text-destructive">*</span> <span className="font-normal text-muted-foreground">(1–5)</span></Label>
+                <div className="grid grid-cols-3 gap-2">
                   {images.map((img, idx) => (
-                    <div key={idx} className="flex gap-2">
-                      <Input
-                        placeholder={`Image ${idx + 1} URL (https://…)`}
-                        value={img}
-                        onChange={(e) => updateImage(idx, e.target.value)}
-                        type="url"
-                      />
-                      {images.length > 1 && (
-                        <Button type="button" variant="ghost" size="sm" onClick={() => removeImage(idx)} className="shrink-0 text-muted-foreground hover:text-destructive">
-                          <X className="w-4 h-4" />
-                        </Button>
-                      )}
+                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                      <img src={img} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
                     </div>
                   ))}
                   {images.length < 5 && (
-                    <Button type="button" variant="outline" size="sm" onClick={addImage} className="gap-1.5">
-                      <Plus className="w-3.5 h-3.5" /> Add image
-                    </Button>
+                    <label className="aspect-square rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-[var(--navy)] hover:bg-blue-50 transition-colors">
+                      <Camera className="w-6 h-6 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Add photo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        multiple
+                        className="sr-only"
+                        onChange={handleImageFiles}
+                      />
+                    </label>
                   )}
                 </div>
               </div>

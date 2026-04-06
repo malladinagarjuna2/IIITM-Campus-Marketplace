@@ -9,7 +9,6 @@ const {
   deleteListing,
   markInterest,
   getMyListings,
-  enableAuction,
 } = require('../controllers/listingController');
 
 // Public routes
@@ -22,6 +21,5 @@ router.post('/', auth, createListing);
 router.put('/:id', auth, updateListing);
 router.delete('/:id', auth, deleteListing);
 router.post('/:id/interest', auth, markInterest);
-router.put('/:id/auction', auth, enableAuction);
 
 module.exports = router;

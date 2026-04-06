@@ -24,7 +24,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function TransactionPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, token, isLoading } = useAuth();
 
   const [transaction, setTransaction] = useState<any>(null);
   const [hasRated, setHasRated] = useState(false);
@@ -50,9 +50,10 @@ export default function TransactionPage() {
   };
 
   useEffect(() => {
+    if (isLoading) return;
     if (!user) { router.replace("/login"); return; }
     fetchTransaction();
-  }, [id, user]);
+  }, [id, isLoading, user]);
 
   const confirm = async () => {
     setActionLoading(true);

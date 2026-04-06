@@ -93,7 +93,6 @@ export default function ListingDetailPage() {
 
   if (!listing) return null;
 
-  const auctionSuggested = Boolean(listing.shouldSuggestAuction && user?._id === listing.seller._id);
   const isSeller = user?._id === listing.seller._id;
   const cond = CONDITION_LABELS[listing.condition] || { label: listing.condition, color: "bg-gray-100 text-gray-700" };
   const sellerInitials = listing.seller.displayName
@@ -107,19 +106,16 @@ export default function ListingDetailPage() {
           <ArrowLeft className="w-4 h-4" /> Back to listings
         </Link>
 
-        {/* Auction suggestion banner */}
-        {auctionSuggested && (
+        {/* Auto-triggered auction banner */}
+        {listing.auctionMode && listing.auctionTriggeredAt && (
           <div className="mb-4 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
             <Zap className="w-5 h-5 text-amber-500 shrink-0" />
             <div className="flex-1 text-sm">
-              <span className="font-semibold text-amber-800">High interest detected!</span>{" "}
-              <span className="text-amber-700">3+ buyers want this. Consider enabling Auction Mode for maximum price.</span>
+              <span className="font-semibold text-amber-800">Auction Mode Active!</span>{" "}
+              <span className="text-amber-700">
+                {listing.interestCount} buyers interested — auction auto-triggered. Deposit: ₹{listing.auctionDeposit?.toLocaleString()}.
+              </span>
             </div>
-            <Link href={`/listings/${id}/auction`}>
-              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white shrink-0">
-                Enable Auction
-              </Button>
-            </Link>
           </div>
         )}
 
