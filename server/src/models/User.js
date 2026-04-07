@@ -1,26 +1,25 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// ─── Nickname Generator ────────────────────────────────────────────────────────
-const adjectives = [
-  'Swift', 'Brave', 'Silent', 'Clever', 'Mystic', 'Bold', 'Calm', 'Witty',
-  'Lucky', 'Noble', 'Fierce', 'Bright', 'Quick', 'Sly', 'Cool', 'Sharp',
-  'Wise', 'Grand', 'Keen', 'Vivid', 'Gentle', 'Daring', 'Nimble', 'Stealthy',
-  'Radiant', 'Cosmic', 'Electric', 'Phantom', 'Turbo', 'Sonic'
-];
-
-const animals = [
-  'Falcon', 'Owl', 'Wolf', 'Fox', 'Hawk', 'Bear', 'Tiger', 'Eagle',
-  'Panther', 'Dolphin', 'Raven', 'Cobra', 'Dragon', 'Phoenix', 'Lion',
-  'Shark', 'Lynx', 'Jaguar', 'Puma', 'Orca', 'Viper', 'Mantis',
-  'Stallion', 'Griffin', 'Kraken', 'Pegasus', 'Sparrow', 'Leopard'
+// ─── Ben 10 Alien Nickname Generator ───────────────────────────────────────────
+const BEN10_ALIENS = [
+  'Heatblast', 'Diamondhead', 'XLR8', 'Upgrade', 'Ghostfreak', 'Ripjaws',
+  'Stinkfly', 'GreyMatter', 'FourArms', 'Wildmutt', 'Cannonbolt', 'Wildvine',
+  'Swampfire', 'EchoEcho', 'Humongousaur', 'Jetray', 'BigChill', 'Chromastone',
+  'Brainstorm', 'Spidermonkey', 'Goop', 'Lodestar', 'Rath', 'Clockwork',
+  'Feedback', 'Gravattack', 'Atomix', 'Astrodactyl', 'Fasttrack', 'AmpFibian',
+  'Armodrillo', 'NRG', 'Terraspin', 'ChamAlien', 'WaterHazard', 'Blitzwolfer',
+  'Snare-oh', 'Frankenstrike', 'Upchuck', 'Ditto', 'EyeGuy', 'WayBig',
 ];
 
 function generateNickname() {
-  const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-  const animal = animals[Math.floor(Math.random() * animals.length)];
-  const num = Math.floor(Math.random() * 100);
-  return `${adj}${animal}${num}`;
+  const alien = BEN10_ALIENS[Math.floor(Math.random() * BEN10_ALIENS.length)];
+  const num = Math.floor(Math.random() * 90) + 10; // 10–99
+  return `${alien}${num}`;
+}
+
+function generateAvatarUrl(nickname) {
+  return `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${encodeURIComponent(nickname)}`;
 }
 
 // ─── Hostel Block Enum ──────────────────────────────────────────────────────────
@@ -148,7 +147,7 @@ userSchema.pre('save', async function () {
   this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
 });
 
-// Ensure unique nickname on save (retry if collision)
+// Ensure unique nickname on save (retry if collision) and set robot avatar
 userSchema.pre('save', async function () {
   if (!this.isNew) return;
 
@@ -160,6 +159,11 @@ userSchema.pre('save', async function () {
     if (!existing) break;
     this.anonymousNickname = generateNickname();
     attempts++;
+  }
+
+  // Auto-set Dicebear robot avatar seeded with the alien nickname
+  if (!this.avatarUrl) {
+    this.avatarUrl = generateAvatarUrl(this.anonymousNickname);
   }
 });
 

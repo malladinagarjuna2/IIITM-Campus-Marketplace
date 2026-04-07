@@ -51,10 +51,19 @@ export default function OnboardingPage() {
     <Card className="border-0 shadow-2xl bg-white/95 backdrop-blur">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl text-[var(--navy)]">One last step</CardTitle>
-        <CardDescription>
-          Your auto-generated nickname is{" "}
-          <span className="font-semibold text-[var(--gold-dark)]">{user.anonymousNickname}</span>
-        </CardDescription>
+        <CardDescription>You've been assigned a unique alien identity</CardDescription>
+        {/* Robot avatar + alien name */}
+        <div className="flex flex-col items-center gap-2 py-3">
+          {user.avatarUrl && (
+            <img
+              src={user.avatarUrl}
+              alt={user.anonymousNickname}
+              className="w-20 h-20 rounded-full border-2 border-[var(--gold)] bg-muted"
+            />
+          )}
+          <span className="text-lg font-bold text-[var(--gold-dark)]">{user.anonymousNickname}</span>
+          <span className="text-xs text-muted-foreground">Your campus alias</span>
+        </div>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">

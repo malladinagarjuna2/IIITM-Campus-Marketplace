@@ -35,6 +35,12 @@ export default function NewListingPage() {
   const [condition, setCondition] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [priceReferenceLink, setPriceReferenceLink] = useState("");
+  const [listingType, setListingType] = useState<"sell" | "rent">("sell");
+  const [rentalPricePerDay, setRentalPricePerDay] = useState("");
+  const [rentalDeposit, setRentalDeposit] = useState("");
+  const [rentalMaxDays, setRentalMaxDays] = useState("");
+  const [rentalFrom, setRentalFrom] = useState("");
+  const [rentalTo, setRentalTo] = useState("");
 
   useEffect(() => {
     if (!isLoading && !user) router.replace("/login");
@@ -87,6 +93,14 @@ export default function NewListingPage() {
           condition,
           images,
           priceReferenceLink: priceReferenceLink || undefined,
+          listingType,
+          rentalDetails: listingType === "rent" ? {
+            pricePerDay: Number(rentalPricePerDay),
+            securityDeposit: Number(rentalDeposit) || 0,
+            maxDurationDays: Number(rentalMaxDays) || undefined,
+            availableFrom: rentalFrom || undefined,
+            availableTo: rentalTo || undefined,
+          } : undefined,
         },
         token,
       });
@@ -113,6 +127,24 @@ export default function NewListingPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Listing type toggle */}
+              <div className="flex rounded-lg border border-border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setListingType("sell")}
+                  className={`flex-1 py-2 text-sm font-semibold transition-colors ${listingType === "sell" ? "bg-[var(--navy)] text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                >
+                  🏷️ Sell
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setListingType("rent")}
+                  className={`flex-1 py-2 text-sm font-semibold transition-colors ${listingType === "rent" ? "bg-purple-600 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                >
+                  🔑 Rent
+                </button>
+              </div>
+
               {/* Title */}
               <div className="space-y-2">
                 <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
@@ -171,6 +203,35 @@ export default function NewListingPage() {
                   />
                 </div>
               </div>
+
+              {/* Rental details */}
+              {listingType === "rent" && (
+                <div className="space-y-3 rounded-xl border border-purple-200 bg-purple-50 p-4">
+                  <p className="text-sm font-semibold text-purple-800">Rental Details</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="rpd" className="text-xs">Price per Day (₹) <span className="text-destructive">*</span></Label>
+                      <Input id="rpd" type="number" min={0} placeholder="e.g. 50" value={rentalPricePerDay} onChange={(e) => setRentalPricePerDay(e.target.value)} required={listingType === "rent"} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="rdep" className="text-xs">Security Deposit (₹)</Label>
+                      <Input id="rdep" type="number" min={0} placeholder="e.g. 200" value={rentalDeposit} onChange={(e) => setRentalDeposit(e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="rmax" className="text-xs">Max Duration (days)</Label>
+                      <Input id="rmax" type="number" min={1} placeholder="e.g. 7" value={rentalMaxDays} onChange={(e) => setRentalMaxDays(e.target.value)} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="rfrom" className="text-xs">Available From</Label>
+                      <Input id="rfrom" type="date" value={rentalFrom} onChange={(e) => setRentalFrom(e.target.value)} />
+                    </div>
+                    <div className="space-y-1 col-span-2">
+                      <Label htmlFor="rto" className="text-xs">Available To</Label>
+                      <Input id="rto" type="date" value={rentalTo} onChange={(e) => setRentalTo(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Condition */}
               <div className="space-y-2">

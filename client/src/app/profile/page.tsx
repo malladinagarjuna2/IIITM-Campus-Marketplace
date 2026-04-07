@@ -10,7 +10,7 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Star, Package, ShoppingBag, Lock, Plus, LogOut } from "lucide-react";
 
@@ -64,6 +64,7 @@ export default function ProfilePage() {
           <CardContent className="p-6">
             <div className="flex items-start gap-4">
               <Avatar className="w-16 h-16 border-2 border-white/30">
+                {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.anonymousNickname} />}
                 <AvatarFallback className="text-xl font-bold bg-[var(--gold)] text-[var(--navy-dark)]">
                   {initials}
                 </AvatarFallback>

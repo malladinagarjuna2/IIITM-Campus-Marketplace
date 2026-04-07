@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   ShoppingBag,
@@ -102,6 +102,7 @@ export default function Navbar({ onSearch, searchValue = "" }: NavbarProps) {
             {/* Profile */}
             <Link href="/profile" className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/10 transition-colors">
               <Avatar className="w-7 h-7">
+                {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.anonymousNickname} />}
                 <AvatarFallback className="text-[10px] font-bold bg-[var(--gold)] text-[var(--navy-dark)]">{initials}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start">

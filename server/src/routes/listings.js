@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { auth } = require('../middleware/auth');
+const { auth, optionalAuth } = require('../middleware/auth');
 const {
   getListings,
   getListing,
@@ -14,7 +14,7 @@ const {
 // Public routes
 router.get('/', getListings);
 router.get('/my', auth, getMyListings);  // must be before /:id
-router.get('/:id', getListing);
+router.get('/:id', optionalAuth, getListing);
 
 // Protected routes
 router.post('/', auth, createListing);

@@ -192,6 +192,15 @@ const submitOffer = async (req, res) => {
       return res.status(403).json({ error: 'Only the buyer can submit offers.' });
     }
 
+    // First offer must be below the listing price
+    if (chat.negotiation && chat.negotiation.offers.length === 0) {
+      const Listing = require('../models/Listing');
+      const listing = await Listing.findById(chat.listing);
+      if (listing && Number(amount) >= listing.price) {
+        return res.status(400).json({ error: `First offer must be below the listed price of ₹${listing.price}` });
+      }
+    }
+
     chat.submitOffer(Number(amount));
     await chat.save();
 
@@ -201,7 +210,7 @@ const submitOffer = async (req, res) => {
       negotiation: chat.negotiation,
     });
   } catch (error) {
-    if (error.message.includes('bargaining cards') || error.message.includes('No active negotiation')) {
+    if (error.message.includes('bargaining cards') || error.message.includes('No active negotiation') || error.message.includes('lower than')) {
       return res.status(400).json({ error: error.message });
     }
     console.error('submitOffer error:', error);

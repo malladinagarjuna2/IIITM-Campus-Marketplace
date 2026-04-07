@@ -80,8 +80,19 @@ const getListing = async (req, res) => {
 
     if (!listing) return res.status(404).json({ error: 'Listing not found.' });
 
-    // Increment view count (non-blocking)
-    Listing.findByIdAndUpdate(req.params.id, { $inc: { viewCount: 1 } }).exec();
+    // Increment view count — deduplicate for logged-in users, always increment for guests
+    if (req.user) {
+      const alreadyViewed = listing.viewedBy.some(
+        (id) => id.toString() === req.user._id.toString()
+      );
+      if (!alreadyViewed) {
+        listing.viewedBy.push(req.user._id);
+        listing.viewCount += 1;
+        listing.save().catch(() => {}); // non-blocking
+      }
+    } else {
+      Listing.findByIdAndUpdate(req.params.id, { $inc: { viewCount: 1 } }).exec();
+    }
 
     res.json({ listing });
   } catch (error) {
@@ -96,7 +107,7 @@ const getListing = async (req, res) => {
  */
 const createListing = async (req, res) => {
   try {
-    const { title, description, category, price, condition, images, videos, priceReferenceLink } = req.body;
+    const { title, description, category, price, condition, images, videos, priceReferenceLink, listingType, rentalDetails } = req.body;
 
     if (!title || !description || !category || price === undefined || !condition || !images) {
       return res.status(400).json({ error: 'Title, description, category, price, condition, and images are required.' });
@@ -112,6 +123,8 @@ const createListing = async (req, res) => {
       images,
       videos: videos || [],
       priceReferenceLink: priceReferenceLink || undefined,
+      listingType: listingType || 'sell',
+      rentalDetails: listingType === 'rent' ? rentalDetails : undefined,
     });
 
     await listing.save();
@@ -145,7 +158,7 @@ const updateListing = async (req, res) => {
       return res.status(400).json({ error: 'Cannot edit a sold listing.' });
     }
 
-    const allowed = ['title', 'description', 'category', 'price', 'condition', 'images', 'videos', 'priceReferenceLink', 'status'];
+    const allowed = ['title', 'description', 'category', 'price', 'condition', 'images', 'videos', 'priceReferenceLink', 'status', 'listingType', 'rentalDetails'];
     allowed.forEach((field) => {
       if (req.body[field] !== undefined) listing[field] = req.body[field];
     });

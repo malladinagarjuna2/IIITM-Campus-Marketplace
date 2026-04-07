@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  ArrowLeft, Send, Zap, CheckCircle, XCircle, CreditCard
+  ArrowLeft, Send, Zap, CheckCircle, XCircle, CreditCard, Info, X
 } from "lucide-react";
 
 export default function ChatPage() {
@@ -23,6 +23,7 @@ export default function ChatPage() {
 
   const [chat, setChat] = useState<any>(null);
   const [role, setRole] = useState<"buyer" | "seller">("buyer");
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const [quickReplies, setQuickReplies] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
@@ -51,6 +52,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (isLoading) return;
     if (!user) { router.replace("/login"); return; }
+    setBannerDismissed(localStorage.getItem(`chat_banner_${id}`) === "1");
     fetchChat();
 
     // Poll for new messages every 3 seconds
@@ -229,6 +231,29 @@ export default function ChatPage() {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Context banner */}
+        {!bannerDismissed && chat && (
+          <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+            <Info className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+            <div className="flex-1 text-sm text-blue-800">
+              <span className="font-semibold">
+                {role === "buyer" ? `Chatting with ${chat.seller?.displayName}` : `Chatting with ${chat.buyer?.displayName}`}
+              </span>{" "}
+              about <span className="font-medium">{chat.listing?.title}</span>
+              {chat.listing?.price && <> — asking ₹{chat.listing.price.toLocaleString()}</>}
+            </div>
+            <button
+              onClick={() => {
+                setBannerDismissed(true);
+                localStorage.setItem(`chat_banner_${id}`, "1");
+              }}
+              className="text-blue-400 hover:text-blue-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         )}
 
         {/* Messages */}

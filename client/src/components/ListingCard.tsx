@@ -22,6 +22,8 @@ interface Listing {
   interestCount: number;
   viewCount: number;
   auctionMode?: boolean;
+  listingType?: string;
+  rentalDetails?: { pricePerDay?: number };
   seller: Seller;
   createdAt: string;
 }
@@ -57,18 +59,20 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           <span className={`absolute top-2 left-2 text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${CONDITION_COLORS[listing.condition] || "bg-gray-100 text-gray-700"}`}>
             {conditionLabel}
           </span>
-          {/* Auction badge */}
-          {listing.auctionMode && (
+          {/* Top-right badge: Rent > Auction > High Demand */}
+          {listing.listingType === "rent" ? (
+            <span className="absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
+              🔑 RENT
+            </span>
+          ) : listing.auctionMode ? (
             <span className="absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded-full bg-[var(--gold)] text-[var(--navy-dark)]">
               🔨 Auction
             </span>
-          )}
-          {/* High demand badge */}
-          {!listing.auctionMode && listing.interestCount >= 2 && (
+          ) : listing.interestCount >= 2 ? (
             <span className="absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded-full bg-orange-500 text-white">
               🔥 High Demand
             </span>
-          )}
+          ) : null}
         </div>
 
         {/* Details */}
@@ -77,7 +81,11 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             {listing.title}
           </h3>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-[var(--navy)]">₹{listing.price.toLocaleString()}</span>
+            {listing.listingType === "rent" && listing.rentalDetails?.pricePerDay ? (
+              <span className="text-lg font-bold text-purple-700">₹{listing.rentalDetails.pricePerDay.toLocaleString()}<span className="text-xs font-medium">/day</span></span>
+            ) : (
+              <span className="text-lg font-bold text-[var(--navy)]">₹{listing.price.toLocaleString()}</span>
+            )}
             <span className="text-xs text-muted-foreground">{timeAgo}</span>
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">

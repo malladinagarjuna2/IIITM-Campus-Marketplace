@@ -200,6 +200,35 @@ const submitRating = async (req, res) => {
 };
 
 /**
+ * PUT /api/transactions/:id/pay
+ * Record simulated payment (mock gateway)
+ */
+const payTransaction = async (req, res) => {
+  try {
+    const { paymentMethod } = req.body;
+    const transaction = await Transaction.findById(req.params.id);
+    if (!transaction) return res.status(404).json({ error: 'Transaction not found.' });
+
+    if (transaction.buyer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Only the buyer can record payment.' });
+    }
+
+    if (transaction.paymentStatus === 'paid') {
+      return res.json({ message: 'Already paid.', transaction });
+    }
+
+    transaction.paymentStatus = 'paid';
+    if (paymentMethod) transaction.paymentMethod = paymentMethod;
+    await transaction.save();
+
+    res.json({ message: 'Payment recorded.', transaction });
+  } catch (error) {
+    console.error('payTransaction error:', error);
+    res.status(500).json({ error: 'Failed to record payment.' });
+  }
+};
+
+/**
  * GET /api/transactions/history
  * Get current user's trade history
  */
@@ -221,4 +250,4 @@ const getHistory = async (req, res) => {
   }
 };
 
-module.exports = { createTransaction, getTransaction, confirmTransaction, completeTransaction, requestReturn, submitRating, getHistory };
+module.exports = { createTransaction, getTransaction, confirmTransaction, completeTransaction, requestReturn, submitRating, getHistory, payTransaction };

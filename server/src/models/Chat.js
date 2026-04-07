@@ -238,6 +238,14 @@ chatSchema.methods.submitOffer = function (amount) {
     throw new Error('All bargaining cards have been used');
   }
 
+  // Each offer must be strictly lower than the previous one
+  if (this.negotiation.offers.length > 0) {
+    const lastOffer = this.negotiation.offers[this.negotiation.offers.length - 1];
+    if (amount >= lastOffer.amount) {
+      throw new Error(`Each new offer must be lower than your previous offer of ₹${lastOffer.amount}`);
+    }
+  }
+
   const round = this.negotiation.offers.length + 1;
   this.negotiation.offers.push({
     round,

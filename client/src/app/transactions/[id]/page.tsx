@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Star, AlertTriangle, ArrowLeft } from "lucide-react";
+import { CheckCircle2, Star, AlertTriangle, ArrowLeft, Smartphone, CreditCard, Banknote, Loader2, CheckCircle } from "lucide-react";
 
 const STATUS_COLORS: Record<string, string> = {
   "pending-confirmation": "bg-yellow-100 text-yellow-800",
@@ -35,6 +35,13 @@ export default function TransactionPage() {
   const [returnReason, setReturnReason] = useState("");
   const [showReturn, setShowReturn] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  // Payment flow state
+  const [payStep, setPayStep] = useState<0 | 1 | 2 | 3>(0);
+  const [payMethod, setPayMethod] = useState<"upi" | "card" | "cash">("upi");
+  const [upiHandle, setUpiHandle] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
 
   const fetchTransaction = async () => {
     try {
@@ -182,6 +189,116 @@ export default function TransactionPage() {
           </CardContent>
         </Card>
 
+        {/* Payment flow — shown only to buyer when payment is pending */}
+        {isBuyer && transaction.paymentStatus === "pending" && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-[var(--navy)] text-base">Complete Payment</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {payStep === 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Choose how to pay ₹{transaction.agreedPrice?.toLocaleString()}</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: "upi", icon: <Smartphone className="w-5 h-5" />, label: "UPI" },
+                      { id: "card", icon: <CreditCard className="w-5 h-5" />, label: "Card" },
+                      { id: "cash", icon: <Banknote className="w-5 h-5" />, label: "Cash" },
+                    ].map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => { setPayMethod(m.id as any); setPayStep(1); }}
+                        className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-border hover:border-[var(--navy)] hover:bg-blue-50 transition-colors"
+                      >
+                        {m.icon}
+                        <span className="text-xs font-semibold">{m.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {payStep === 1 && payMethod === "upi" && (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium">Enter UPI ID</p>
+                  <input
+                    type="text"
+                    placeholder="yourname@upi"
+                    value={upiHandle}
+                    onChange={(e) => setUpiHandle(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-input text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <Button
+                    className="w-full bg-[var(--navy)] text-white"
+                    disabled={!upiHandle.includes("@")}
+                    onClick={() => setPayStep(2)}
+                  >Pay ₹{transaction.agreedPrice?.toLocaleString()}</Button>
+                  <button className="text-xs text-muted-foreground w-full text-center" onClick={() => setPayStep(0)}>← Back</button>
+                </div>
+              )}
+
+              {payStep === 1 && payMethod === "card" && (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium">Card Details</p>
+                  <input
+                    type="text"
+                    placeholder="1234 5678 9012 3456"
+                    value={cardNumber}
+                    maxLength={19}
+                    onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim())}
+                    className="w-full px-3 py-2 rounded-lg border border-input text-sm focus:outline-none focus:ring-2 focus:ring-ring font-mono"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="text" placeholder="MM/YY" value={cardExpiry} maxLength={5}
+                      onChange={(e) => { const v = e.target.value.replace(/\D/g,""); setCardExpiry(v.length > 2 ? `${v.slice(0,2)}/${v.slice(2)}` : v); }}
+                      className="px-3 py-2 rounded-lg border border-input text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                    <input type="text" placeholder="CVV" value={cardCvv} maxLength={3}
+                      onChange={(e) => setCardCvv(e.target.value.replace(/\D/g,""))}
+                      className="px-3 py-2 rounded-lg border border-input text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                  </div>
+                  <Button
+                    className="w-full bg-[var(--navy)] text-white"
+                    disabled={cardNumber.replace(/\s/g,"").length < 16 || cardExpiry.length < 5 || cardCvv.length < 3}
+                    onClick={() => setPayStep(2)}
+                  >Pay ₹{transaction.agreedPrice?.toLocaleString()}</Button>
+                  <button className="text-xs text-muted-foreground w-full text-center" onClick={() => setPayStep(0)}>← Back</button>
+                </div>
+              )}
+
+              {payStep === 1 && payMethod === "cash" && (
+                <div className="space-y-3 text-center">
+                  <div className="text-4xl">💵</div>
+                  <p className="text-sm text-muted-foreground">Pay <span className="font-bold text-foreground">₹{transaction.agreedPrice?.toLocaleString()}</span> in cash when you meet the {isBuyer ? "seller" : "buyer"}.</p>
+                  <Button className="w-full bg-[var(--navy)] text-white" onClick={() => setPayStep(2)}>Confirm Cash Payment</Button>
+                  <button className="text-xs text-muted-foreground w-full text-center" onClick={() => setPayStep(0)}>← Back</button>
+                </div>
+              )}
+
+              {payStep === 2 && (
+                <PaymentProcessing onDone={() => setPayStep(3)} />
+              )}
+
+              {payStep === 3 && (
+                <div className="space-y-4 text-center py-2">
+                  <CheckCircle className="w-14 h-14 text-green-500 mx-auto" />
+                  <div>
+                    <p className="font-bold text-green-700 text-lg">Payment Successful!</p>
+                    <p className="text-sm text-muted-foreground">₹{transaction.agreedPrice?.toLocaleString()} via {payMethod.toUpperCase()}</p>
+                  </div>
+                  <Button
+                    className="w-full bg-[var(--navy)] text-white"
+                    onClick={async () => {
+                      await api<any>(`/transactions/${id}/pay`, { method: "PUT", body: { paymentMethod: payMethod }, token });
+                      await fetchTransaction();
+                    }}
+                  >Continue to Handover →</Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Confirmation flow */}
         {(transaction.status === "pending-confirmation" || transaction.status === "confirmed") && (
           <Card>
@@ -283,6 +400,20 @@ export default function TransactionPage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function PaymentProcessing({ onDone }: { onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2200);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <div className="flex flex-col items-center gap-3 py-6">
+      <Loader2 className="w-10 h-10 text-[var(--navy)] animate-spin" />
+      <p className="text-sm font-medium text-muted-foreground">Processing payment…</p>
     </div>
   );
 }

@@ -39,6 +39,8 @@ export default function ListingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [imageIdx, setImageIdx] = useState(0);
   const [chatLoading, setChatLoading] = useState(false);
+  const [interested, setInterested] = useState(false);
+  const [interestLoading, setInterestLoading] = useState(false);
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -73,6 +75,32 @@ export default function ListingDetailPage() {
       toast.error(err instanceof Error ? err.message : "Failed to start chat");
     } finally {
       setChatLoading(false);
+    }
+  };
+
+  const handleMarkInterest = async () => {
+    if (!user) {
+      toast.error("Sign in to mark interest");
+      router.push("/login");
+      return;
+    }
+    setInterestLoading(true);
+    try {
+      const data = await api<any>(`/listings/${id}/interest`, { method: "POST", token });
+      setInterested(true);
+      setListing((prev: any) => ({ ...prev, interestCount: data.interestCount, auctionMode: data.auctionMode }));
+      if (data.auctionTriggered) {
+        toast.success("🔨 Auction mode triggered! 2+ buyers are interested.");
+      } else if (data.alreadyInterested) {
+        toast.info("You've already marked interest in this listing.");
+        setInterested(true);
+      } else {
+        toast.success("Interest marked!");
+      }
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to mark interest");
+    } finally {
+      setInterestLoading(false);
     }
   };
 
@@ -184,10 +212,15 @@ export default function ListingDetailPage() {
           {/* Details */}
           <div className="space-y-5">
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${cond.color}`}>
                   {cond.label}
                 </span>
+                {listing.listingType === "rent" && (
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-100 text-purple-800">
+                    🔑 RENT
+                  </span>
+                )}
                 {listing.auctionMode && (
                   <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-[var(--gold)] text-[var(--navy-dark)]">
                     🔨 Auction
@@ -197,7 +230,11 @@ export default function ListingDetailPage() {
               </div>
               <h1 className="text-2xl font-bold text-foreground leading-tight">{listing.title}</h1>
               <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-3xl font-extrabold text-[var(--navy)]">₹{listing.price.toLocaleString()}</span>
+                {listing.listingType === "rent" && listing.rentalDetails?.pricePerDay ? (
+                  <span className="text-3xl font-extrabold text-purple-700">₹{listing.rentalDetails.pricePerDay.toLocaleString()}<span className="text-base font-medium">/day</span></span>
+                ) : (
+                  <span className="text-3xl font-extrabold text-[var(--navy)]">₹{listing.price.toLocaleString()}</span>
+                )}
                 {listing.auctionMode && listing.auctionDeposit && (
                   <span className="text-sm text-muted-foreground">Deposit: ₹{listing.auctionDeposit}</span>
                 )}
@@ -217,6 +254,30 @@ export default function ListingDetailPage() {
               <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-2">Description</h3>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{listing.description}</p>
             </div>
+
+            {/* Rental info */}
+            {listing.listingType === "rent" && listing.rentalDetails && (
+              <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 space-y-2">
+                <p className="text-sm font-semibold text-purple-800">🔑 Rental Info</p>
+                <div className="grid grid-cols-2 gap-2 text-sm text-purple-900">
+                  {listing.rentalDetails.pricePerDay && (
+                    <div><span className="text-muted-foreground">Per day:</span> <span className="font-medium">₹{listing.rentalDetails.pricePerDay.toLocaleString()}</span></div>
+                  )}
+                  {listing.rentalDetails.securityDeposit > 0 && (
+                    <div><span className="text-muted-foreground">Deposit:</span> <span className="font-medium">₹{listing.rentalDetails.securityDeposit.toLocaleString()}</span></div>
+                  )}
+                  {listing.rentalDetails.maxDurationDays && (
+                    <div><span className="text-muted-foreground">Max duration:</span> <span className="font-medium">{listing.rentalDetails.maxDurationDays} days</span></div>
+                  )}
+                  {listing.rentalDetails.availableFrom && (
+                    <div><span className="text-muted-foreground">From:</span> <span className="font-medium">{new Date(listing.rentalDetails.availableFrom).toLocaleDateString()}</span></div>
+                  )}
+                  {listing.rentalDetails.availableTo && (
+                    <div><span className="text-muted-foreground">To:</span> <span className="font-medium">{new Date(listing.rentalDetails.availableTo).toLocaleDateString()}</span></div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Price reference */}
             {listing.priceReferenceLink && (
@@ -268,14 +329,25 @@ export default function ListingDetailPage() {
                   </Link>
                 </div>
               ) : (
-                <Button
-                  onClick={handleStartChat}
-                  disabled={chatLoading}
-                  className="w-full bg-[var(--navy)] hover:bg-[var(--navy-dark)] text-white gap-2 py-6 text-base"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  {chatLoading ? "Starting chat…" : "Chat with Seller"}
-                </Button>
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleMarkInterest}
+                    disabled={interested || interestLoading}
+                    className="w-full gap-2 border-[var(--navy)] text-[var(--navy)] hover:bg-blue-50"
+                  >
+                    {interested ? "❤️ Interested" : interestLoading ? "Marking…" : "🔔 Mark Interest"}
+                    <span className="text-xs text-muted-foreground ml-auto">{listing.interestCount} interested</span>
+                  </Button>
+                  <Button
+                    onClick={handleStartChat}
+                    disabled={chatLoading}
+                    className="w-full bg-[var(--navy)] hover:bg-[var(--navy-dark)] text-white gap-2 py-6 text-base"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    {chatLoading ? "Starting chat…" : "Chat with Seller"}
+                  </Button>
+                </div>
               )
             ) : (
               <div className="w-full py-3 text-center rounded-xl bg-muted text-muted-foreground font-medium capitalize">

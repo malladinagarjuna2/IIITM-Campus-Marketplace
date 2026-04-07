@@ -15,6 +15,7 @@ const CATEGORIES = [
 const CONDITIONS = ['like-new', 'good', 'fair', 'poor'];
 
 const LISTING_STATUSES = ['active', 'sold', 'reserved', 'removed'];
+const LISTING_TYPES = ['sell', 'rent'];
 
 // ─── Listing Schema ─────────────────────────────────────────────────────────────
 const listingSchema = new mongoose.Schema(
@@ -97,6 +98,20 @@ const listingSchema = new mongoose.Schema(
       },
     },
 
+    listingType: {
+      type: String,
+      enum: { values: LISTING_TYPES, message: '{VALUE} is not a valid listing type' },
+      default: 'sell',
+    },
+
+    rentalDetails: {
+      pricePerDay: { type: Number, min: 0 },
+      securityDeposit: { type: Number, min: 0, default: 0 },
+      maxDurationDays: { type: Number, min: 1 },
+      availableFrom: { type: Date },
+      availableTo: { type: Date },
+    },
+
     status: {
       type: String,
       enum: {
@@ -142,6 +157,12 @@ const listingSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+
+    viewedBy: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'User',
+      default: [],
+    },
   },
   {
     timestamps: true,
@@ -174,3 +195,4 @@ module.exports = Listing;
 module.exports.CATEGORIES = CATEGORIES;
 module.exports.CONDITIONS = CONDITIONS;
 module.exports.LISTING_STATUSES = LISTING_STATUSES;
+module.exports.LISTING_TYPES = LISTING_TYPES;

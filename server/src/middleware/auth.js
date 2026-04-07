@@ -37,6 +37,27 @@ const auth = async (req, res, next) => {
 };
 
 /**
+ * Optional auth — attaches user if valid token present, silently skips if not
+ */
+const optionalAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.userId);
+      if (user) {
+        req.user = user;
+        req.userId = user._id;
+      }
+    }
+  } catch (_) {
+    // Invalid/expired token — proceed as guest
+  }
+  next();
+};
+
+/**
  * Generate JWT token for a user
  */
 const generateToken = (userId) => {
@@ -45,4 +66,4 @@ const generateToken = (userId) => {
   });
 };
 
-module.exports = { auth, generateToken };
+module.exports = { auth, optionalAuth, generateToken };
